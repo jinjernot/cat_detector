@@ -1,0 +1,13 @@
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Cat Stream</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <h1>Cat Stream</h1>
+    <div class="stream-container">
+        <img id="video-stream" src="{{ url_for('video_feed') }}" alt="Cat Detection Stream">
+    </div>
+</body>
+</html>
