@@ -16,6 +16,4 @@ def video_feed():
     return Response(detect_cats(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 if __name__ == '__main__':
-    if not os.path.exists('snapshots'):
-        os.makedirs('snapshots')
     app.run(debug=True)
