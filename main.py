@@ -1,7 +1,10 @@
-from flask import Flask, render_template, Response
+from flask import Flask, render_template, Response, request
 from app.cat import detect_cats
+from config import RTSP_URLS
 
 app = Flask(__name__)
+
+current_stream_index = 0
 
 @app.route('/')
 def index():
@@ -9,7 +12,15 @@ def index():
 
 @app.route('/video_feed')
 def video_feed():
-    return Response(detect_cats(), mimetype='multipart/x-mixed-replace; boundary=frame')
+    global current_stream_index
+    rtsp_url = RTSP_URLS[current_stream_index]
+    return Response(detect_cats(rtsp_url), mimetype='multipart/x-mixed-replace; boundary=frame')
+
+@app.route('/switch_stream', methods=['POST'])
+def switch_stream():
+    global current_stream_index
+    current_stream_index = (current_stream_index + 1) % len(RTSP_URLS)
+    return {'status': 'success', 'current_stream': current_stream_index}
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0')
+    app.run(host='0.0.0.0', port=8080, debug=True)

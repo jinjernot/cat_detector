@@ -3,7 +3,7 @@ import cv2
 
 import numpy as np
 
-from config import RTSP_URL, YOLO_WEIGHTS, YOLO_CFG, COCO_NAMES, SNAPSHOT_INTERVAL
+from config import YOLO_WEIGHTS, YOLO_CFG, COCO_NAMES, SNAPSHOT_INTERVAL
 
 # Load YOLO
 net = cv2.dnn.readNet(YOLO_WEIGHTS, YOLO_CFG)
@@ -17,14 +17,14 @@ with open(COCO_NAMES, "r") as f:
 
 last_snapshot_time = 0
 
-def detect_cats():
+def detect_cats(rtsp_url):
     global last_snapshot_time
 
-    cap = cv2.VideoCapture(RTSP_URL)
+    cap = cv2.VideoCapture(rtsp_url)
     cap.set(cv2.CAP_PROP_BUFFERSIZE, 2)
 
     if not cap.isOpened():
-        print("Error: Couldn't open video stream.")
+        print(f"Error: Couldn't open video stream at {rtsp_url}.")
         return None
 
     frame_count = 0
