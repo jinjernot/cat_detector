@@ -3,16 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WebXR Cat Detection</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@webxr/three-webxr@1.0.0/index.js"></script>
-    <style>
-        body { margin: 0; overflow: hidden; }
-        #vr-button { position: absolute; top: 10px; left: 10px; z-index: 10; }
-    </style>
+    <title>Cat Stream with Three.js</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
 <body>
-    <button id="vr-button">Enter VR</button>
-    <script src="{{ url_for('static', filename='js/webxr.js') }}"></script>
+    <h1 style="display: none;">Cat Stream with Three.js</h1>
+
+    <img id="video-stream" src="{{ url_for('video_feed') }}" alt="Cat Detection Stream" style="display: none;">
+
+    <!-- The canvas element where the Three.js scene will be rendered -->
+    <canvas id="xr-canvas"></canvas>
+
+    <!-- Include the JavaScript file -->
+    <script type="module" src="{{ url_for('static', filename='js/cube.js') }}"></script>
 </body>
 </html>
