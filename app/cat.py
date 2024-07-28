@@ -1,37 +1,92 @@
+import time
 import cv2
 
-def detect_cats():
-    # Open a connection to the camera
-    cap = cv2.VideoCapture(0)
+import numpy as np
 
-    # Load the cat detector Haarcascade
-    cat_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalcatface.xml')
+from config import RTSP_URL, YOLO_WEIGHTS, YOLO_CFG, COCO_NAMES, SNAPSHOT_INTERVAL
+
+# Load YOLO
+net = cv2.dnn.readNet(YOLO_WEIGHTS, YOLO_CFG)
+layer_names = net.getLayerNames()
+unconnected_out_layers = net.getUnconnectedOutLayers()
+output_layers = [layer_names[i - 1] for i in unconnected_out_layers.flatten()]
+
+# Load COCO names
+with open(COCO_NAMES, "r") as f:
+    classes = [line.strip() for line in f.readlines()]
+
+last_snapshot_time = 0
+
+def detect_cats():
+    global last_snapshot_time
+
+    cap = cv2.VideoCapture(RTSP_URL)
+    cap.set(cv2.CAP_PROP_BUFFERSIZE, 2)
+
+    if not cap.isOpened():
+        print("Error: Couldn't open video stream.")
+        return None
+
+    frame_count = 0
+    frame_skip = 5  # Process one frame every 5 frames to reduce load
 
     while True:
-        # Read each frame
         ret, frame = cap.read()
-        
-        # If frame is read correctly, proceed
+
         if not ret:
-            break
+            print("Error: Couldn't read frame.")
+            continue
 
-        # Convert to grayscale
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        frame_count += 1
+        if frame_count % frame_skip != 0:
+            continue
 
-        # Detect cats
-        cats = cat_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(30, 30))
+        try:
+            height, width, channels = frame.shape
+        except Exception as e:
+            print(f"Error processing frame: {e}")
+            continue
 
-        # Draw rectangle around each cat
-        for (x, y, w, h) in cats:
-            cv2.rectangle(frame, (x, y), (x + w, y + h), (255, 0, 0), 2)
+        # Resize the frame to improve processing speed
+        frame_resized = cv2.resize(frame, (320, 320))
+        blob = cv2.dnn.blobFromImage(frame_resized, 0.00392, (320, 320), (0, 0, 0), True, crop=False)
+        net.setInput(blob)
+        outs = net.forward(output_layers)
 
-        # Encode frame as JPEG
+        current_time = time.time()
+        cat_detected = False
+        for out in outs:
+            for detection in out:
+                scores = detection[5:]
+                class_id = np.argmax(scores)
+                confidence = scores[class_id]
+                if confidence > 0.6 and classes[class_id] == "cat":
+                    center_x = int(detection[0] * width)
+                    center_y = int(detection[1] * height)
+                    w = int(detection[2] * width)
+                    h = int(detection[3] * height)
+                    x = int(center_x - w / 2)
+                    y = int(center_y - h / 2)
+                    # Draw rectangle around detected object
+                    cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
+                    # Put label (class name) on the detected object
+                    cv2.putText(frame, 'Cat', (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+                    
+                    # Capture and save the snapshot
+                    if current_time - last_snapshot_time >= SNAPSHOT_INTERVAL:
+                        snapshot_filename = f'snapshots/snapshot_{int(current_time)}.jpg'
+                        cv2.imwrite(snapshot_filename, frame)
+                        print(f"Snapshot saved to {snapshot_filename}")
+                        last_snapshot_time = current_time
+
+                    cat_detected = True
+                    break
+            if cat_detected:
+                break
+
         ret, jpeg = cv2.imencode('.jpg', frame)
-        
-        # Yield the frame
-        frame = jpeg.tobytes()
+        frame_bytes = jpeg.tobytes()
         yield (b'--frame\r\n'
-               b'Content-Type: image/jpeg\r\n\r\n' + frame + b'\r\n\r\n')
+               b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
 
-    # Release the camera
     cap.release()
