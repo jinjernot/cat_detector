@@ -1,20 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Cat Stream with Three.js</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi Streaming</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}" />
     <script type="module" src="{{ url_for('static', filename='js/switchStream.js') }}"></script>
 </head>
-
 <body>
-    <h1 style="display: none">Cat Stream with Three.js</h1>
-    <img id="video-stream" src="{{ url_for('video_feed') }}" alt="Cat Detection Stream" style="display: none" />
-    <canvas id="xr-canvas"></canvas>
-    <button onclick="switchStream()">Switch Stream</button>
+    <div class="container">
+        <h1 style="display: none">Multi Streaming</h1>
+        <img id="video-stream" src="{{ url_for('video_feed') }}" alt="Cat Detection Stream" />
+        <canvas id="xr-canvas"></canvas>
+        <button onclick="switchStream()">Switch Stream</button>
+    </div>
     <script type="module" src="{{ url_for('static', filename='js/scene.js') }}"></script>
 </body>
-
 </html>

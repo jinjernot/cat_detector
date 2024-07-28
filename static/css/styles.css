@@ -2,21 +2,27 @@ body {
   margin: 0;
   overflow: hidden;
   display: flex;
-  justify-content: center; /* Center the canvas horizontally */
-  align-items: center; /* Center the canvas vertically */
-  height: 100vh; /* Full viewport height */
-  background-color: #000000; /* Optional: Set a background color */
+  justify-content: center;
+  align-items: center;
+  height: 100vh; 
+  background-color: #000000; 
+}
+
+.container {
+  display: flex;
+  flex-direction: column; 
+  align-items: center; 
 }
 
 #xr-canvas {
-  width: 80vw; /* Set canvas width to 80% of the viewport width */
-  height: 45vw; /* Maintain a 16:9 aspect ratio */
-  max-width: 800px; /* Maximum width */
-  max-height: 450px; /* Maximum height */
-  border: 1px solid #ccc; /* Optional: Add a border for clarity */
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Optional: Add a shadow for depth */
-  border-radius: 8px; /* Optional: Add rounded corners */
-  background-color: #000000; /* Optional: Set a background color for the canvas */
+  width: 80vw; 
+  height: 45vw; 
+  max-width: 800px; 
+  max-height: 450px; 
+  border: 1px solid #ccc; 
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); 
+  border-radius: 8px;
+  background-color: #000000; 
 }
 
 #video-stream {
