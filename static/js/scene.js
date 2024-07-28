@@ -5,16 +5,19 @@ const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 1000);
 const renderer = new THREE.WebGLRenderer({
     canvas: document.getElementById('xr-canvas'),
-    alpha: true, // Enable transparency for overlay
-    antialias: true, // Enable antialiasing for smoother edges
+    alpha: true,
+    antialias: true,
 });
 
-renderer.setSize(window.innerWidth, window.innerHeight);
-document.body.appendChild(renderer.domElement);
+// Get the canvas element
+const canvas = document.getElementById('xr-canvas');
+
+// Set the renderer size based on the canvas dimensions
+renderer.setSize(canvas.clientWidth, canvas.clientHeight);
 
 // Debugging: Log initial setup
 console.log('Scene initialized');
-console.log(`Canvas Size: ${renderer.domElement.width}x${renderer.domElement.height}`);
+console.log(`Canvas Size: ${canvas.clientWidth}x${canvas.clientHeight}`);
 
 // Access the img element for the video stream
 const videoImg = document.getElementById('video-stream');
@@ -28,7 +31,7 @@ videoImg.onload = function() {
     videoTexture.needsUpdate = true;
     videoTexture.minFilter = THREE.LinearFilter;
     videoTexture.magFilter = THREE.LinearFilter;
-    videoTexture.format = THREE.RGBFormat;
+    videoTexture.format = THREE.RGBAFormat; // Updated to RGBAFormat
 
     // Debugging: Verify image texture
     console.log('Image texture created:', videoTexture);
@@ -41,25 +44,11 @@ videoImg.onload = function() {
     scene.add(videoMesh);
 
     // Debugging: Log mesh addition
-    console.log('Image mesh added to scene');
-
-    // Create a simple cube
-    const cubeGeometry = new THREE.BoxGeometry(1, 1, 1);
-    const cubeMaterial = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
-    const cube = new THREE.Mesh(cubeGeometry, cubeMaterial);
-    cube.position.set(0, 0, -3); // Position the cube in front of the camera
-    scene.add(cube);
-
-    // Debugging: Log cube addition
-    console.log('Cube added to scene');
+    console.log('Video mesh added to scene');
 
     // Animation loop
     function animate() {
         requestAnimationFrame(animate);
-
-        // Rotate the cube
-        cube.rotation.x += 0.01;
-        cube.rotation.y += 0.01;
 
         // Update the video texture to ensure it's refreshed
         videoTexture.needsUpdate = true;
@@ -78,8 +67,9 @@ videoImg.onload = function() {
 // Update renderer and camera on resize
 window.addEventListener('resize', onWindowResize, false);
 function onWindowResize() {
-    camera.aspect = window.innerWidth / window.innerHeight;
+    // Update the aspect ratio based on canvas size
+    camera.aspect = canvas.clientWidth / canvas.clientHeight;
     camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setSize(canvas.clientWidth, canvas.clientHeight);
     console.log('Window resized');
 }
