@@ -1,9 +1,7 @@
 import time
 import cv2
-
 import numpy as np
-
-from app.settings.models import YOLO_WEIGHTS, YOLO_CFG, COCO_NAMES, SNAPSHOT_INTERVAL
+from app.settings.models import YOLO_WEIGHTS, YOLO_CFG, COCO_NAMES
 
 # Load YOLO
 net = cv2.dnn.readNet(YOLO_WEIGHTS, YOLO_CFG)
@@ -11,15 +9,11 @@ layer_names = net.getLayerNames()
 unconnected_out_layers = net.getUnconnectedOutLayers()
 output_layers = [layer_names[i - 1] for i in unconnected_out_layers.flatten()]
 
-# Load COCO names
+# Load COCO
 with open(COCO_NAMES, "r") as f:
     classes = [line.strip() for line in f.readlines()]
 
-last_snapshot_time = 0
-
-def detect_cats(rtsp_url):
-    global last_snapshot_time
-
+def process_video_stream(rtsp_url):
     cap = cv2.VideoCapture(rtsp_url)
     cap.set(cv2.CAP_PROP_BUFFERSIZE, 2)
 
@@ -28,7 +22,7 @@ def detect_cats(rtsp_url):
         return None
 
     frame_count = 0
-    frame_skip = 5  # Process one frame every 5 frames to reduce load
+    frame_skip = 5 
 
     while True:
         ret, frame = cap.read()
@@ -47,20 +41,19 @@ def detect_cats(rtsp_url):
             print(f"Error processing frame: {e}")
             continue
 
-        # Resize the frame to improve processing speed
+        # Resize frame
         frame_resized = cv2.resize(frame, (320, 320))
         blob = cv2.dnn.blobFromImage(frame_resized, 0.00392, (320, 320), (0, 0, 0), True, crop=False)
         net.setInput(blob)
         outs = net.forward(output_layers)
 
-        current_time = time.time()
-        cat_detected = False
+        # Draw detections
         for out in outs:
             for detection in out:
                 scores = detection[5:]
                 class_id = np.argmax(scores)
                 confidence = scores[class_id]
-                if confidence > 0.6 and classes[class_id] == "cat":
+                if confidence > 0.6:
                     center_x = int(detection[0] * width)
                     center_y = int(detection[1] * height)
                     w = int(detection[2] * width)
@@ -70,19 +63,7 @@ def detect_cats(rtsp_url):
                     # Draw rectangle around detected object
                     cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 255, 0), 2)
                     # Put label (class name) on the detected object
-                    cv2.putText(frame, 'Cat', (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-                    
-                    # Capture and save the snapshot
-                    if current_time - last_snapshot_time >= SNAPSHOT_INTERVAL:
-                        snapshot_filename = f'snapshots/snapshot_{int(current_time)}.jpg'
-                        cv2.imwrite(snapshot_filename, frame)
-                        print(f"Snapshot saved to {snapshot_filename}")
-                        last_snapshot_time = current_time
-
-                    cat_detected = True
-                    break
-            if cat_detected:
-                break
+                    cv2.putText(frame, classes[class_id], (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
 
         ret, jpeg = cv2.imencode('.jpg', frame)
         frame_bytes = jpeg.tobytes()
